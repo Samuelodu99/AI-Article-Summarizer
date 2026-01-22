@@ -1,0 +1,29 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: ai-article-summarizer-backend
+
+  # CORS configuration - restrict to specific origins for security
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000}
+    allowed-methods: GET,POST,OPTIONS
+    allowed-headers: "*"
+    allow-credentials: true
+
+  ai:
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+      chat:
+        options:
+          # Recommended models: llama3, mistral, llama3.2, phi3
+          # Run 'ollama pull llama3' to download a model first
+          model: ${OLLAMA_MODEL:llama3}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
