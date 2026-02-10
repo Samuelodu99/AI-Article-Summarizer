@@ -1,17 +1,16 @@
 package com.example.aiarticlesummarizer.api.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+@ValidSummarizeRequest
 public class SummarizeRequest {
 
-    @NotBlank
     @Size(max = 10000)
-    private String content;
+    private String content; // Optional if URL is provided
 
     @Size(max = 2048)
-    private String url;
+    private String url; // Optional if content is provided
 
     @Pattern(regexp = "^(short|medium|long)$", message = "targetLength must be one of: short, medium, long")
     private String targetLength; // Restricted to enum values to prevent prompt injection

@@ -12,8 +12,11 @@ import java.util.stream.Collectors;
 @Configuration
 public class CorsConfig implements WebMvcConfigurer {
 
-    @Value("${spring.cors.allowed-origins:http://localhost:5173,http://localhost:3000}")
+    @Value("${spring.cors.allowed-origins:http://localhost:5173,http://localhost:5174,http://localhost:3000}")
     private String allowedOrigins;
+
+    @Value("${spring.cors.allowed-methods:GET,POST,OPTIONS,DELETE}")
+    private String allowedMethods;
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
@@ -24,9 +27,15 @@ public class CorsConfig implements WebMvcConfigurer {
                 .filter(origin -> !origin.isEmpty())
                 .collect(Collectors.toList());
         
+        // Parse allowed methods
+        List<String> methods = Arrays.stream(allowedMethods.split(","))
+                .map(String::trim)
+                .filter(method -> !method.isEmpty())
+                .collect(Collectors.toList());
+        
         registry.addMapping("/api/**")
                 .allowedOrigins(origins.toArray(new String[0]))
-                .allowedMethods("GET", "POST", "OPTIONS")
+                .allowedMethods(methods.toArray(new String[0]))
                 .allowedHeaders("*")
                 .allowCredentials(true);
     }

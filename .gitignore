@@ -14,3 +14,6 @@ Thumbs.db
 
 .env
 
+# Local H2 database files
+backend/data/
+
