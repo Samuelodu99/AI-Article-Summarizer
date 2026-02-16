@@ -32,19 +32,25 @@ public class StreamingSummarizationService {
     private final UrlFetchingService urlFetchingService;
     private final SummaryRepository summaryRepository;
     private final MeterRegistry meterRegistry;
+    private final DemoModeService demoModeService;
 
     public StreamingSummarizationService(ChatModel chatModel,
                                          UrlFetchingService urlFetchingService,
                                          SummaryRepository summaryRepository,
-                                         MeterRegistry meterRegistry) {
+                                         MeterRegistry meterRegistry,
+                                         DemoModeService demoModeService) {
         this.chatModel = chatModel;
         this.urlFetchingService = urlFetchingService;
         this.summaryRepository = summaryRepository;
         this.meterRegistry = meterRegistry;
+        this.demoModeService = demoModeService;
     }
 
     @Transactional
     public Flux<String> summarizeStream(SummarizeRequest request) throws IOException {
+        if (demoModeService.isDemoMode()) {
+            return summarizeStreamDemo(request);
+        }
         // Safely validate and normalize targetLength to prevent prompt injection
         String requestedTargetLength = request.getTargetLength();
         final String targetLength = com.example.aiarticlesummarizer.api.dto.TargetLength
@@ -199,5 +205,38 @@ public class StreamingSummarizationService {
         } catch (Exception e) {
             return "";
         }
+    }
+
+    private Flux<String> summarizeStreamDemo(SummarizeRequest request) throws IOException {
+        String requestedTargetLength = request.getTargetLength();
+        final String targetLength = com.example.aiarticlesummarizer.api.dto.TargetLength
+                .fromString(requestedTargetLength)
+                .getValue();
+
+        final String sourceUrl = request.getUrl();
+        final String finalArticleTitle = "Demo Article";  // Skip URL fetch in demo
+        final String finalSourceUrl = sourceUrl;
+        String content = (sourceUrl != null && !sourceUrl.isBlank())
+                ? "[Demo mode: URL content not fetched]"
+                : Objects.requireNonNull(request.getContent(), "content must not be null");
+
+        return demoModeService.streamMockSummary(targetLength)
+                .doOnComplete(() -> {
+                    try {
+                        String completeSummary = demoModeService.getMockSummary(targetLength);
+                        Summary summaryEntity = new Summary();
+                        summaryEntity.setOriginalContent(content);
+                        summaryEntity.setSummary(completeSummary);
+                        summaryEntity.setSourceUrl(finalSourceUrl);
+                        summaryEntity.setArticleTitle(finalArticleTitle);
+                        summaryEntity.setTargetLength(targetLength);
+                        summaryEntity.setModel("demo");
+                        summaryEntity.setLatencyMs(200);
+                        summaryEntity.setCreatedAt(LocalDateTime.now());
+                        summaryRepository.save(summaryEntity);
+                    } catch (Exception e) {
+                        logger.warn("Error saving demo streamed summary: {}", e.getMessage());
+                    }
+                });
     }
 }

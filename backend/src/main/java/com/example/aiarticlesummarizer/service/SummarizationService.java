@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -31,19 +32,25 @@ public class SummarizationService {
     private final UrlFetchingService urlFetchingService;
     private final SummaryRepository summaryRepository;
     private final MeterRegistry meterRegistry;
+    private final DemoModeService demoModeService;
 
     public SummarizationService(ChatModel chatModel,
                                 UrlFetchingService urlFetchingService,
                                 SummaryRepository summaryRepository,
-                                MeterRegistry meterRegistry) {
+                                MeterRegistry meterRegistry,
+                                DemoModeService demoModeService) {
         this.chatModel = chatModel;
         this.urlFetchingService = urlFetchingService;
         this.summaryRepository = summaryRepository;
         this.meterRegistry = meterRegistry;
+        this.demoModeService = demoModeService;
     }
 
     @Transactional
     public SummarizeResponse summarize(SummarizeRequest request) throws IOException {
+        if (demoModeService.isDemoMode()) {
+            return summarizeDemo(request);
+        }
         // Safely validate and normalize targetLength to prevent prompt injection
         String requestedTargetLength = request.getTargetLength();
         final String targetLength = com.example.aiarticlesummarizer.api.dto.TargetLength
@@ -200,6 +207,43 @@ public class SummarizationService {
         } catch (URISyntaxException e) {
             return "";
         }
+    }
+
+    private SummarizeResponse summarizeDemo(SummarizeRequest request) throws IOException {
+        String requestedTargetLength = request.getTargetLength();
+        final String targetLength = com.example.aiarticlesummarizer.api.dto.TargetLength
+                .fromString(requestedTargetLength)
+                .getValue();
+
+        String content;
+        String sourceUrl = request.getUrl();
+        String articleTitle = null;
+
+        if (sourceUrl != null && !sourceUrl.isBlank()) {
+            content = "[Demo mode: URL content not fetched]";
+            articleTitle = "Demo Article";  // Skip URL fetch in demo to avoid 403/timeouts
+        } else {
+            content = Objects.requireNonNull(request.getContent(), "content must not be null");
+        }
+
+        String summary = demoModeService.getMockSummary(targetLength);
+
+        Summary summaryEntity = new Summary();
+        summaryEntity.setOriginalContent(content);
+        summaryEntity.setSummary(summary);
+        summaryEntity.setSourceUrl(sourceUrl);
+        summaryEntity.setArticleTitle(articleTitle != null ? articleTitle : "Demo Article");
+        summaryEntity.setTargetLength(targetLength);
+        summaryEntity.setModel("demo");
+        summaryEntity.setLatencyMs(150);
+        Summary savedSummary = summaryRepository.save(summaryEntity);
+
+        SummarizeResponse response = new SummarizeResponse(summary, "demo", 150);
+        response.setId(savedSummary.getId());
+        response.setCreatedAt(savedSummary.getCreatedAt());
+        response.setSourceUrl(sourceUrl);
+        response.setArticleTitle(articleTitle != null ? articleTitle : "Demo Article");
+        return response;
     }
 }
 

@@ -2,6 +2,20 @@
 
 A full‑stack, production‑ready AI Article Summarizer built with **Java + Spring Boot + Spring AI** on the backend and **React + Vite** on the frontend.
 
+---
+
+### 🎯 Live Demo (for recruiters & portfolio)
+
+**Try it without installing anything:**
+
+| Option | How |
+|-------|-----|
+| **GitHub Codespaces** | Click **Code** → **Codespaces** → **Create codespace on main**. Once open, run `./scripts/start-demo.sh` in the terminal. No Ollama needed—demo mode uses mock summaries. |
+| **Render (cloud)** | Push to GitHub, then [connect to Render](https://dashboard.render.com/) → **New** → **Blueprint** → select this repo. Set `CORS_ALLOWED_ORIGINS` on the backend to your frontend URL, and `VITE_API_URL` on the frontend to your backend URL. Both services run in **demo mode** (mock summaries, no Ollama). |
+| **Local demo** | `DEMO_MODE=true` in backend + `npm run dev` in frontend. No Ollama required. |
+
+---
+
 ### ✨ Features
 
 - **📝 Text & URL Input**: Paste article text directly or provide a URL to automatically fetch and extract content
@@ -92,10 +106,18 @@ A full‑stack, production‑ready AI Article Summarizer built with **Java + Spr
    - `npm run dev`
 3. Open `http://localhost:5173` in your browser.
 
+### Demo mode
+
+When `DEMO_MODE=true`, the backend returns pre-generated mock summaries instead of calling Ollama. Use this for:
+- Portfolio deployments (Render, Vercel, etc.) where Ollama isn't available
+- GitHub Codespaces demos
+- Quick local testing without installing Ollama
+
 ### Docker & Deployment
 
-- `backend/Dockerfile`: builds a minimal JVM image to run the Spring Boot JAR.
+- `backend/Dockerfile`: multi-stage build (Maven + JRE) for cloud deployment.
 - `frontend/Dockerfile`: builds the Vite app and serves it via Nginx.
+- `render.yaml`: Blueprint for one-click deploy to [Render](https://render.com) (backend + frontend).
 - `docker-compose.yml`:
   - Builds and runs both `backend` and `frontend`.
   - Exposes:
@@ -111,6 +133,7 @@ docker compose up --build
 
 ### ✅ Implemented Features
 
+- ✅ **Live demo** - GitHub Codespaces, Render blueprint, demo mode (no Ollama)
 - ✅ **User authentication** - JWT-based login/register; first user is admin
 - ✅ **Admin page** - List users, view stats (admin only)
 - ✅ **URL fetching** - Automatically extracts article content from URLs using Jsoup

@@ -1,0 +1,30 @@
+# Render Blueprint - Deploy AI Article Summarizer for portfolio/recruiter demos
+# 1. Push this repo to GitHub
+# 2. Connect repo to Render: https://dashboard.render.com/ → New → Blueprint
+# 3. After backend deploys, set VITE_API_URL on the frontend service to your backend URL (e.g. https://ai-article-summarizer-backend.onrender.com)
+
+services:
+  - type: web
+    name: ai-article-summarizer-backend
+    runtime: docker
+    rootDir: backend
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: DEMO_MODE
+        value: "true"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false  # Set to your frontend URL after deploy, e.g. https://ai-article-summarizer-frontend.onrender.com
+
+  - type: web
+    name: ai-article-summarizer-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false  # Set to your backend URL after deploy, e.g. https://ai-article-summarizer-backend.onrender.com

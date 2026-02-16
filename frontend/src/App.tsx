@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from './context/AuthContext';
+import { API_BASE } from './config';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AdminRoute } from './components/AdminRoute';
 import { Login } from './pages/Login';
@@ -131,7 +132,7 @@ function SummarizerApp() {
       // Use fetch with ReadableStream for POST requests with SSE
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      const response = await fetch('/api/v1/summarize/stream', {
+      const response = await fetch(`${API_BASE}/api/v1/summarize/stream`, {
         method: 'POST',
         headers,
         body: JSON.stringify(requestData),
@@ -343,7 +344,7 @@ function SummarizerApp() {
     try {
       const headers: Record<string, string> = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      const response = await fetch(`/api/v1/history/${id}/export/pdf`, { headers });
+      const response = await fetch(`${API_BASE}/api/v1/history/${id}/export/pdf`, { headers });
       if (!response.ok) throw new Error('Export failed');
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
@@ -364,7 +365,7 @@ function SummarizerApp() {
     try {
       const headers: Record<string, string> = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      const response = await fetch(`/api/v1/history/${id}/export/markdown`, { headers });
+      const response = await fetch(`${API_BASE}/api/v1/history/${id}/export/markdown`, { headers });
       if (!response.ok) throw new Error('Export failed');
       const text = await response.text();
       const blob = new Blob([text], { type: 'text/markdown' });

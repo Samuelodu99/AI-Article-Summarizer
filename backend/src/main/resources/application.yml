@@ -46,8 +46,9 @@ spring:
           # Run 'ollama pull llama3' to download a model first
           model: ${OLLAMA_MODEL:llama3}
 
-# JWT (set JWT_SECRET in production; use at least 32 characters)
+# Demo mode: when true, returns mock summaries (no Ollama needed). Use for portfolio/recruiter demos.
 app:
+  demo-mode: ${DEMO_MODE:false}
   jwt:
     secret: ${JWT_SECRET:default-secret-min-256-bits-for-hs256-please-set-in-production}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
